@@ -23,7 +23,9 @@ talent-analytics-pdf-analyzer/
 │   └── api.py                      # Web API（FastAPI）
 │
 ├── requirements.txt                # 必要なPythonパッケージ一覧
-├── .env                            # 実際の環境変数（自分で作成）
+├── .env                            # 実際の環境変数（自分で作成、Gitには含めない）
+├── .env.example                    # 環境変数テンプレート
+├── .gitignore                      # Git除外ファイル
 │
 ├── Dockerfile                      # Dockerイメージの定義
 ├── docker-compose.yml              # Docker Composeの設定
@@ -31,8 +33,15 @@ talent-analytics-pdf-analyzer/
 ├── run_api.py                      # APIサーバー起動スクリプト
 ├── test_env.py                     # 環境変数確認スクリプト
 ├── test_azure_openai.py            # Azure OpenAI接続テスト
+├── test_pdf_extraction.py          # PDFテキスト抽出テスト
+├── test_endpoint_variations.py     # エンドポイントバリエーションテスト
+├── test_slash_comparison.py        # エンドポイントスラッシュ比較テスト
 │
-└── README.md                       # プロジェクトの説明書
+├── README.md                       # プロジェクトの説明書
+├── PROJECT_SUMMARY.md              # このファイル（プロジェクト概要）
+├── PDF_EXTRACTION_NOTES.md        # PDF抽出に関する注意事項
+├── DOCKER_USAGE.md                 # Docker使用方法ガイド
+└── DOCKER_BENEFITS.md              # Docker使用の利点
 ```
 
 ## 🔧 主要なファイルの役割
@@ -73,6 +82,12 @@ python3 -m ta_interview_briefing.main sample.pdf -n "候補者名"
 
 ### 4. `ta_interview_briefing/api.py`
 **役割**: Web APIとして提供する
+
+**エンドポイント**:
+- `GET /`: API情報を取得
+- `GET /health`: ヘルスチェック
+- `POST /analyze`: PDFをアップロードして解析結果をJSONで取得
+- `POST /generate_pdf`: PDFをアップロードしてブリーフィングPDFを生成
 
 **使い方**:
 - サーバーを起動: `python3 run_api.py`
@@ -121,12 +136,19 @@ docker-compose up -d
 
 ### 1. 環境変数（`.env`ファイル）
 
-以下の情報を設定する必要があります：
+`.env.example`をコピーして`.env`ファイルを作成し、以下の情報を設定してください：
+
+```bash
+cp .env.example .env
+```
+
+`.env`ファイルを編集して、以下の情報を設定：
 
 ```
 AZURE_OPENAI_ENDPOINT=https://your-resource-name.openai.azure.com/
 AZURE_OPENAI_API_KEY=your-api-key-here
-AZURE_OPENAI_DEPLOYMENT=gpt-4o
+AZURE_OPENAI_API_VERSION=2024-02-15-preview
+AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4o
 ```
 
 **取得方法**:

@@ -88,13 +88,38 @@ uvicorn ta_interview_briefing.api:app --reload --host 0.0.0.0 --port 8000
 
 - `GET /`: API情報を取得
 - `GET /health`: ヘルスチェック
+- `POST /analyze`: PDFをアップロードして解析結果をJSONで取得
+  - `file`: PDFファイル（multipart/form-data、必須）
+  - 戻り値: 解析結果（summary, risk_points, attract_points, notes_for_interviewer）
 - `POST /generate_pdf`: PDFをアップロードしてブリーフィングPDFを生成
   - `file`: PDFファイル（multipart/form-data、必須）
   - `candidate_name`: 候補者名（オプション、デフォルト: "候補者"）
 
 #### API使用例
 
-**curlコマンド：**
+**解析結果をJSONで取得（`/analyze`エンドポイント）：**
+
+```bash
+curl -X POST "http://localhost:8000/analyze" \
+  -F "file=@sample_ta_report.pdf" \
+  | jq
+```
+
+```python
+import requests
+
+url = "http://localhost:8000/analyze"
+files = {"file": open("sample_ta_report.pdf", "rb")}
+
+response = requests.post(url, files=files)
+if response.status_code == 200:
+    analysis = response.json()
+    print("解析結果:", analysis)
+else:
+    print(f"エラー: {response.status_code} - {response.text}")
+```
+
+**ブリーフィングPDFを生成（`/generate_pdf`エンドポイント）：**
 
 ```bash
 curl -X POST "http://localhost:8000/generate_pdf" \
@@ -102,8 +127,6 @@ curl -X POST "http://localhost:8000/generate_pdf" \
   -F "candidate_name=水野 港太" \
   --output briefing.pdf
 ```
-
-**Python（requestsライブラリ）：**
 
 ```python
 import requests
@@ -133,20 +156,30 @@ http://localhost:8000/docs
 
 ```
 talent-analytics-pdf-analyzer/
-├── ta_interview_briefing/
-│   ├── __init__.py          # パッケージ初期化
-│   ├── models.py            # データモデル定義
-│   ├── azure_client.py      # Azure OpenAIを使ったPDF解析
-│   ├── pdf_builder.py       # ReportLabを使ったPDF生成
-│   ├── main.py              # CLI実行用エントリーポイント
-│   └── api.py               # FastAPIアプリケーション
-├── run_api.py               # FastAPIサーバー起動スクリプト
-├── requirements.txt         # 依存パッケージ
-├── .env.example             # 環境変数テンプレート
-├── Dockerfile               # Dockerイメージ定義
-├── docker-compose.yml       # Docker Compose設定
-├── .dockerignore            # Dockerビルド除外ファイル
-└── README.md                # このファイル
+├── ta_interview_briefing/          # メインパッケージ
+│   ├── __init__.py                 # パッケージ初期化
+│   ├── models.py                   # データモデル定義
+│   ├── azure_client.py             # Azure OpenAIを使ったPDF解析
+│   ├── pdf_builder.py              # ReportLabを使ったPDF生成
+│   ├── main.py                     # CLI実行用エントリーポイント
+│   └── api.py                      # FastAPIアプリケーション
+├── run_api.py                      # FastAPIサーバー起動スクリプト
+├── requirements.txt                # 依存パッケージ
+├── .env.example                    # 環境変数テンプレート
+├── Dockerfile                      # Dockerイメージ定義
+├── docker-compose.yml              # Docker Compose設定
+├── .dockerignore                   # Dockerビルド除外ファイル
+├── .gitignore                      # Git除外ファイル
+├── test_azure_openai.py            # Azure OpenAI接続テスト
+├── test_env.py                     # 環境変数確認スクリプト
+├── test_pdf_extraction.py          # PDFテキスト抽出テスト
+├── test_endpoint_variations.py     # エンドポイントバリエーションテスト
+├── test_slash_comparison.py        # エンドポイントスラッシュ比較テスト
+├── README.md                       # このファイル
+├── PROJECT_SUMMARY.md              # プロジェクト概要ドキュメント
+├── PDF_EXTRACTION_NOTES.md        # PDF抽出に関する注意事項
+├── DOCKER_USAGE.md                 # Docker使用方法ガイド
+└── DOCKER_BENEFITS.md              # Docker使用の利点
 ```
 
 ## 主要関数
