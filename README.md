@@ -16,6 +16,8 @@ Talent Analytics（性格・価値観診断）の受検結果レポートPDFを�
 pip install -r requirements.txt
 ```
 
+**注意**: テストを実行する場合は、`requirements.txt`に含まれるpytest関連のパッケージもインストールされます。
+
 ### 2. 環境変数の設定
 
 `.env.example`をコピーして`.env`ファイルを作成し、Azure OpenAIの設定を入力してください：
@@ -40,6 +42,29 @@ AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4o
 ```bash
 python test_env.py
 ```
+
+### 4. テストの実行
+
+pytestを使用してテストを実行できます：
+
+```bash
+# すべてのテストを実行
+pytest
+
+# カバレッジレポート付きで実行
+pytest --cov=ta_interview_briefing --cov-report=html
+
+# 特定のテストファイルのみ実行
+pytest tests/test_models.py
+
+# マーカーでフィルタリング（例：単体テストのみ）
+pytest -m unit
+
+# 環境変数が必要なテストをスキップ
+pytest -m "not requires_env"
+```
+
+テスト結果のカバレッジレポートは `htmlcov/index.html` で確認できます。
 
 ## 使用方法
 
@@ -170,11 +195,19 @@ talent-analytics-pdf-analyzer/
 ├── docker-compose.yml              # Docker Compose設定
 ├── .dockerignore                   # Dockerビルド除外ファイル
 ├── .gitignore                      # Git除外ファイル
-├── test_azure_openai.py            # Azure OpenAI接続テスト
+├── tests/                          # テストディレクトリ
+│   ├── __init__.py                 # テストパッケージ初期化
+│   ├── conftest.py                  # pytest共通設定とフィクスチャ
+│   ├── test_models.py              # データモデルのテスト
+│   ├── test_azure_client.py         # Azure OpenAIクライアントのテスト
+│   ├── test_pdf_builder.py          # PDF生成のテスト
+│   └── test_api.py                 # FastAPIエンドポイントのテスト
+├── test_azure_openai.py            # Azure OpenAI接続テスト（手動実行用）
 ├── test_env.py                     # 環境変数確認スクリプト
-├── test_pdf_extraction.py          # PDFテキスト抽出テスト
+├── test_pdf_extraction.py          # PDFテキスト抽出テスト（手動実行用）
 ├── test_endpoint_variations.py     # エンドポイントバリエーションテスト
 ├── test_slash_comparison.py        # エンドポイントスラッシュ比較テスト
+├── pytest.ini                      # pytest設定ファイル
 ├── README.md                       # このファイル
 ├── PROJECT_SUMMARY.md              # プロジェクト概要ドキュメント
 ├── PDF_EXTRACTION_NOTES.md        # PDF抽出に関する注意事項

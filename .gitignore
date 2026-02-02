@@ -42,6 +42,10 @@ ENV/
 .coverage
 htmlcov/
 .tox/
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
 
 # Jupyter Notebook
 .ipynb_checkpoints
