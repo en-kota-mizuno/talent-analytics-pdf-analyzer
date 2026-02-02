@@ -1,0 +1,54 @@
+# CIワークフロー
+# このファイルは、コードがプッシュされたり、プルリクエストが作成されたときに
+# 自動的にテストを実行する設定です
+
+name: CI  # ワークフローの名前（GitHub上で表示される）
+
+# いつこのワークフローを実行するか（トリガー）
+on:
+  push:  # コードがプッシュされたとき
+    branches: [ main ]  # mainブランチへのプッシュ
+  pull_request:  # プルリクエストが作成・更新されたとき
+    branches: [ main ]
+
+# 実行するジョブ（複数のジョブを定義できる）
+jobs:
+  test:  # ジョブ名（任意の名前）
+    name: Run Tests  # ジョブの表示名
+    
+    # どのOSで実行するか（複数指定可能）
+    runs-on: ubuntu-latest  # Ubuntuの最新版を使用
+    
+    # 実行するステップ（順番に実行される）
+    steps:
+      # ステップ1: コードをチェックアウト（リポジトリのコードを取得）
+      - name: Checkout code
+        uses: actions/checkout@v4  # GitHub公式のアクションを使用
+      
+      # ステップ2: Pythonのセットアップ
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'  # Python 3.9を使用
+          cache: 'pip'  # pipの依存関係をキャッシュ（2回目以降の実行が高速化）
+      
+      # ステップ3: 依存パッケージのインストール
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      # ステップ4: テストの実行
+      # 注意: カバレッジ設定は pytest.ini に既に定義されているため、
+      # ここではマーカーのみ指定（重複を避ける）
+      - name: Run tests
+        run: |
+          pytest -m "not requires_env"
+      
+      # ステップ5: カバレッジレポートのアップロード（オプション）
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false  # カバレッジが低くてもCIを失敗させない
+
