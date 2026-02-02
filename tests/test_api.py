@@ -67,7 +67,6 @@ class TestAnalyzeEndpoint:
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
     
-    @pytest.mark.requires_env
     @patch('ta_interview_briefing.api.analyze_ta_pdf_with_azure')
     def test_analyze_success(self, mock_analyze, client):
         """解析成功のテスト（モック使用）"""
@@ -94,6 +93,26 @@ class TestAnalyzeEndpoint:
             assert "risk_points" in data
             assert "attract_points" in data
             assert "notes_for_interviewer" in data
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+    
+    @patch('ta_interview_briefing.api.analyze_ta_pdf_with_azure')
+    def test_analyze_pdf_analysis_error(self, mock_analyze, client):
+        """PDF解析エラーのテスト"""
+        # モックでエラーを発生させる
+        mock_analyze.side_effect = Exception("解析エラー")
+        
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
+            tmp.write(b"%PDF-1.4\n")
+            tmp_path = tmp.name
+        
+        try:
+            with open(tmp_path, 'rb') as f:
+                response = client.post("/analyze", files={"file": f})
+            
+            assert response.status_code == 500
+            assert "PDF解析に失敗しました" in response.json()["detail"]
         finally:
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
@@ -128,7 +147,6 @@ class TestGeneratePdfEndpoint:
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
     
-    @pytest.mark.requires_env
     @patch('ta_interview_briefing.api.analyze_ta_pdf_with_azure')
     @patch('ta_interview_briefing.api.generate_interview_pdf_from_azure')
     def test_generate_pdf_success(self, mock_generate, mock_analyze, client):
@@ -156,6 +174,62 @@ class TestGeneratePdfEndpoint:
             
             assert response.status_code == 200
             assert response.headers["content-type"] == "application/pdf"
+            # モックが呼ばれたことを確認
+            mock_analyze.assert_called_once()
+            mock_generate.assert_called_once()
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+    
+    @patch('ta_interview_briefing.api.analyze_ta_pdf_with_azure')
+    def test_generate_pdf_analysis_error(self, mock_analyze, client):
+        """PDF解析エラー時のテスト"""
+        mock_analyze.side_effect = Exception("解析エラー")
+        
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
+            tmp.write(b"%PDF-1.4\n")
+            tmp_path = tmp.name
+        
+        try:
+            with open(tmp_path, 'rb') as f:
+                response = client.post(
+                    "/generate_pdf",
+                    files={"file": f},
+                    data={"candidate_name": "テスト候補者"}
+                )
+            
+            assert response.status_code == 500
+            assert "PDF解析に失敗しました" in response.json()["detail"]
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+    
+    @patch('ta_interview_briefing.api.analyze_ta_pdf_with_azure')
+    @patch('ta_interview_briefing.api.generate_interview_pdf_from_azure')
+    def test_generate_pdf_generation_error(self, mock_generate, mock_analyze, client):
+        """PDF生成エラー時のテスト"""
+        mock_analyze.return_value = {
+            "summary": "テスト",
+            "risk_points": ["リスク1"],
+            "attract_points": ["強み1"],
+            "notes_for_interviewer": ["メモ1"]
+        }
+        mock_generate.side_effect = Exception("生成エラー")
+        
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
+            tmp.write(b"%PDF-1.4\n")
+            tmp_path = tmp.name
+        
+        try:
+            with open(tmp_path, 'rb') as f:
+                response = client.post(
+                    "/generate_pdf",
+                    files={"file": f},
+                    data={"candidate_name": "テスト候補者"}
+                )
+            
+            assert response.status_code == 500
+            assert "PDF生成に失敗しました" in response.json()["detail"]
         finally:
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)

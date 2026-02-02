@@ -132,4 +132,137 @@ class TestAnalyzeTaPdfWithAzure:
             os.environ.pop("AZURE_OPENAI_ENDPOINT", None)
             os.environ.pop("AZURE_OPENAI_API_KEY", None)
             os.environ.pop("AZURE_OPENAI_DEPLOYMENT_NAME", None)
+    
+    @patch('ta_interview_briefing.azure_client.extract_text_from_pdf')
+    @patch('ta_interview_briefing.azure_client.AzureOpenAI')
+    def test_analyze_pdf_long_text_truncation(self, mock_azure_client, mock_extract_text):
+        """長いテキストの切り詰め処理のテスト"""
+        os.environ["AZURE_OPENAI_ENDPOINT"] = "https://test.openai.azure.com/"
+        os.environ["AZURE_OPENAI_API_KEY"] = "test-key"
+        os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"] = "gpt-4o"
+        
+        # 長いテキストを生成（8000文字を超える）
+        long_text = "テスト" * 3000  # 約9000文字
+        mock_extract_text.return_value = long_text
+        
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock()]
+        mock_response.choices[0].message.content = '{"summary": "テスト", "risk_points": ["リスク1"], "attract_points": ["強み1"], "notes_for_interviewer": ["メモ1"]}'
+        
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.return_value = mock_response
+        mock_azure_client.return_value = mock_client
+        
+        import tempfile
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
+            tmp_path = tmp.name
+        
+        try:
+            result = analyze_ta_pdf_with_azure(tmp_path)
+            # API呼び出し時にテキストが切り詰められたことを確認
+            call_args = mock_client.chat.completions.create.call_args
+            user_message = call_args[1]["messages"][1]["content"]
+            assert len(user_message) <= 8000 + 100  # 少し余裕を持たせる
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+            os.environ.pop("AZURE_OPENAI_ENDPOINT", None)
+            os.environ.pop("AZURE_OPENAI_API_KEY", None)
+            os.environ.pop("AZURE_OPENAI_DEPLOYMENT_NAME", None)
+    
+    @patch('ta_interview_briefing.azure_client.extract_text_from_pdf')
+    @patch('ta_interview_briefing.azure_client.AzureOpenAI')
+    def test_analyze_pdf_with_json_schema(self, mock_azure_client, mock_extract_text):
+        """JSON Schemaを使用する場合のテスト"""
+        os.environ["AZURE_OPENAI_ENDPOINT"] = "https://test.openai.azure.com/"
+        os.environ["AZURE_OPENAI_API_KEY"] = "test-key"
+        os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"] = "gpt-4o"
+        os.environ["AZURE_OPENAI_API_VERSION"] = "2024-08-01-preview"
+        
+        mock_extract_text.return_value = "サンプルPDFテキスト"
+        
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock()]
+        mock_response.choices[0].message.content = '{"summary": "テスト", "risk_points": ["リスク1"], "attract_points": ["強み1"], "notes_for_interviewer": ["メモ1"]}'
+        
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.return_value = mock_response
+        mock_azure_client.return_value = mock_client
+        
+        import tempfile
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
+            tmp_path = tmp.name
+        
+        try:
+            result = analyze_ta_pdf_with_azure(tmp_path)
+            # JSON Schemaが使用されたことを確認
+            call_args = mock_client.chat.completions.create.call_args
+            assert "response_format" in call_args[1]
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+            os.environ.pop("AZURE_OPENAI_ENDPOINT", None)
+            os.environ.pop("AZURE_OPENAI_API_KEY", None)
+            os.environ.pop("AZURE_OPENAI_DEPLOYMENT_NAME", None)
+            os.environ.pop("AZURE_OPENAI_API_VERSION", None)
+    
+    @patch('ta_interview_briefing.azure_client.extract_text_from_pdf')
+    @patch('ta_interview_briefing.azure_client.AzureOpenAI')
+    def test_analyze_pdf_json_parse_error(self, mock_azure_client, mock_extract_text):
+        """JSON解析エラーのテスト"""
+        os.environ["AZURE_OPENAI_ENDPOINT"] = "https://test.openai.azure.com/"
+        os.environ["AZURE_OPENAI_API_KEY"] = "test-key"
+        os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"] = "gpt-4o"
+        
+        mock_extract_text.return_value = "サンプルPDFテキスト"
+        
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock()]
+        mock_response.choices[0].message.content = "これは有効なJSONではありません"
+        
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.return_value = mock_response
+        mock_azure_client.return_value = mock_client
+        
+        import tempfile
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
+            tmp_path = tmp.name
+        
+        try:
+            with pytest.raises(ValueError, match="JSONとして解析できませんでした"):
+                analyze_ta_pdf_with_azure(tmp_path)
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+            os.environ.pop("AZURE_OPENAI_ENDPOINT", None)
+            os.environ.pop("AZURE_OPENAI_API_KEY", None)
+            os.environ.pop("AZURE_OPENAI_DEPLOYMENT_NAME", None)
+    
+    @patch('ta_interview_briefing.azure_client.extract_text_from_pdf')
+    @patch('ta_interview_briefing.azure_client.AzureOpenAI')
+    def test_analyze_pdf_api_error(self, mock_azure_client, mock_extract_text):
+        """API呼び出しエラーのテスト"""
+        os.environ["AZURE_OPENAI_ENDPOINT"] = "https://test.openai.azure.com/"
+        os.environ["AZURE_OPENAI_API_KEY"] = "test-key"
+        os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"] = "gpt-4o"
+        
+        mock_extract_text.return_value = "サンプルPDFテキスト"
+        
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.side_effect = Exception("APIエラー")
+        mock_azure_client.return_value = mock_client
+        
+        import tempfile
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
+            tmp_path = tmp.name
+        
+        try:
+            with pytest.raises(ValueError, match="Azure OpenAI APIの呼び出しに失敗しました"):
+                analyze_ta_pdf_with_azure(tmp_path)
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+            os.environ.pop("AZURE_OPENAI_ENDPOINT", None)
+            os.environ.pop("AZURE_OPENAI_API_KEY", None)
+            os.environ.pop("AZURE_OPENAI_DEPLOYMENT_NAME", None)
 

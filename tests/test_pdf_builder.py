@@ -118,4 +118,29 @@ class TestGenerateInterviewPdfFromAzure:
         finally:
             if os.path.exists(output_path):
                 os.unlink(output_path)
+    
+    def test_generate_pdf_with_empty_summary(self):
+        """summaryが空の場合のPDF生成（138行目をカバー）"""
+        analysis = {
+            "summary": "",  # 空のsummary
+            "risk_points": ["リスク1"],
+            "attract_points": ["強み1"],
+            "notes_for_interviewer": ["メモ1"]
+        }
+        
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
+            output_path = tmp.name
+        
+        try:
+            generate_interview_pdf_from_azure(
+                output_path,
+                "テスト候補者",
+                analysis
+            )
+            
+            assert os.path.exists(output_path)
+            assert os.path.getsize(output_path) > 0
+        finally:
+            if os.path.exists(output_path):
+                os.unlink(output_path)
 
