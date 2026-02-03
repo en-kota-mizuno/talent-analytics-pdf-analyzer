@@ -37,10 +37,14 @@ AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4o
 
 ### 3. 環境変数の確認（オプション）
 
-環境変数が正しく設定されているか確認：
+環境変数が正しく設定されているか確認するには、以下のコマンドでテストを実行してください：
 
 ```bash
-python test_env.py
+# 環境変数が必要なテストを実行（.envファイルが設定されている場合）
+pytest -m requires_env
+
+# または、環境変数を直接確認
+python -c "import os; from dotenv import load_dotenv; load_dotenv(); print('AZURE_OPENAI_ENDPOINT:', os.getenv('AZURE_OPENAI_ENDPOINT'))"
 ```
 
 ### 4. テストの実行
@@ -195,19 +199,20 @@ talent-analytics-pdf-analyzer/
 ├── docker-compose.yml              # Docker Compose設定
 ├── .dockerignore                   # Dockerビルド除外ファイル
 ├── .gitignore                      # Git除外ファイル
+├── .cursorrules                    # Cursorエディタ用のプロジェクトルール
 ├── tests/                          # テストディレクトリ
 │   ├── __init__.py                 # テストパッケージ初期化
 │   ├── conftest.py                  # pytest共通設定とフィクスチャ
 │   ├── test_models.py              # データモデルのテスト
 │   ├── test_azure_client.py         # Azure OpenAIクライアントのテスト
 │   ├── test_pdf_builder.py          # PDF生成のテスト
-│   └── test_api.py                 # FastAPIエンドポイントのテスト
-├── test_azure_openai.py            # Azure OpenAI接続テスト（手動実行用）
-├── test_env.py                     # 環境変数確認スクリプト
-├── test_pdf_extraction.py          # PDFテキスト抽出テスト（手動実行用）
-├── test_endpoint_variations.py     # エンドポイントバリエーションテスト
-├── test_slash_comparison.py        # エンドポイントスラッシュ比較テスト
+│   ├── test_api.py                 # FastAPIエンドポイントのテスト
+│   ├── test_main.py                # CLI（main.py）のテスト
+│   └── README.md                   # テストディレクトリの説明
 ├── pytest.ini                      # pytest設定ファイル
+├── .github/                         # GitHub Actions設定
+│   └── workflows/
+│       └── ci.yml                  # CI/CDワークフロー
 ├── README.md                       # このファイル
 ├── PROJECT_SUMMARY.md              # プロジェクト概要ドキュメント
 ├── PDF_EXTRACTION_NOTES.md        # PDF抽出に関する注意事項
@@ -320,15 +325,27 @@ docker run -d \
 - 長文の場合は1ページに収まらない可能性があります（PoCレベル）
 - Dockerを使用する場合は、`.env`ファイルを適切に設定してください
 
+## 開発ガイドライン
+
+### Cursor Rules
+このプロジェクトには`.cursorrules`ファイルが含まれており、Cursorエディタで開発する際のプロジェクト固有のルールが定義されています。
+
+**重要なルール:**
+- **README.mdの更新**: コードや機能を変更した際は、必ずREADME.mdを更新してください
+- テスト駆動開発を推奨（テストカバレッジ89%を維持）
+- コミットメッセージはプレフィックス付きで日本語で記述
+- 環境変数は`.env`ファイルを使用（Gitに含めない）
+
+詳細は`.cursorrules`ファイルを参照してください。
+
 ## プロダクション化に向けて
 
-このプロジェクトをプロダクトに組み込む際の改修項目については、`PRODUCTION_CHECKLIST.md` を参照してください。
+このプロジェクトをプロダクトに組み込む際の主な改修項目：
 
-主な改修項目：
-- セキュリティ強化（認証・認可、入力検証）
-- ログ・監視の実装
-- エラーハンドリングの強化
-- パフォーマンス最適化
-- データベース連携
-- テストの実装
+- **セキュリティ強化**: 認証・認可、入力検証、APIキーの適切な管理
+- **ログ・監視の実装**: 構造化ログ、エラートラッキング、パフォーマンス監視
+- **エラーハンドリングの強化**: より詳細なエラーメッセージ、リトライ機能
+- **パフォーマンス最適化**: キャッシュの導入、非同期処理の検討
+- **データベース連携**: 解析結果の永続化、履歴管理
+- **テストの拡充**: 統合テスト、E2Eテストの追加（現在のカバレッジ: 89%）
 

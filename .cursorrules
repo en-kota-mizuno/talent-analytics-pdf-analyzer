@@ -1,0 +1,106 @@
+# Talent Analytics PDF Analyzer - Cursor Rules
+
+## プロジェクト概要
+このプロジェクトは、Talent Analytics（性格・価値観診断）の受検結果レポートPDFを解析し、面接官向けのブリーフィングPDFを自動生成するPoCプロジェクトです。
+
+## 技術スタック
+- **言語**: Python 3.9+
+- **フレームワーク**: FastAPI
+- **AI**: Azure OpenAI (GPT-4o)
+- **PDF処理**: PyPDF2 (抽出), ReportLab (生成)
+- **テスト**: pytest (カバレッジ89%)
+- **CI/CD**: GitHub Actions
+- **コンテナ**: Docker, Docker Compose
+
+## コーディング規約
+
+### コードスタイル
+- PythonのPEP 8に準拠
+- 型ヒントを使用（`typing`モジュール）
+- 関数・クラスにはdocstringを記述
+- 日本語のコメント・docstringを使用
+
+### ファイル構成
+```
+ta_interview_briefing/
+├── models.py          # Pydanticモデル定義
+├── azure_client.py    # Azure OpenAI連携
+├── pdf_builder.py     # PDF生成
+├── main.py            # CLIエントリーポイント
+└── api.py             # FastAPIアプリケーション
+
+tests/
+├── test_models.py
+├── test_azure_client.py
+├── test_pdf_builder.py
+├── test_api.py
+└── test_main.py
+```
+
+### 命名規則
+- 関数・変数: `snake_case`
+- クラス: `PascalCase`
+- 定数: `UPPER_SNAKE_CASE`
+- ファイル名: `snake_case.py`
+
+## 重要なルール
+
+### 1. README.mdの更新
+**重要**: コードや機能を変更した際は、必ずREADME.mdを更新してください。
+- 新しい機能を追加した場合
+- 使用方法が変わった場合
+- 依存関係が変更された場合
+- 設定方法が変わった場合
+- プロジェクト構成が変わった場合
+
+README.mdは常に最新の状態を保つようにしてください。
+
+### 2. テスト駆動開発
+- 新しい機能を追加する前にテストを書く
+- テストカバレッジを維持（現在89%）
+- モックを使用して外部APIへの依存を避ける
+- `@pytest.mark.requires_env`は環境変数が必要なテストのみに使用
+
+### 3. コミットメッセージ
+- プレフィックスを使用: `feat:`, `fix:`, `test:`, `docs:`, `chore:`, `ci:`
+- 日本語で記述（簡潔に）
+- 変更内容を明確に
+
+### 4. 環境変数
+- `.env`ファイルはGitに含めない（`.gitignore`で除外）
+- `.env.example`を更新して必要な環境変数を明示
+- 環境変数の説明をREADME.mdに記載
+
+### 5. エラーハンドリング
+- 適切な例外処理を実装
+- エラーメッセージは日本語で分かりやすく
+- ログ出力を適切に使用
+
+### 6. 型安全性
+- Pydanticモデルを使用してデータ検証
+- 型ヒントを活用
+- `Optional`や`Union`を適切に使用
+
+## 禁止事項
+- 機密情報（APIキーなど）をコードに直接記述しない
+- `.env`ファイルをコミットしない
+- テストなしで機能を追加しない
+- README.mdを更新せずに機能を変更しない
+
+## 推奨事項
+- コード変更時は関連するテストも更新
+- ドキュメント（README.md、PROJECT_SUMMARY.md）を同期
+- プルリクエスト前にローカルでテストを実行
+- CI/CDが通ることを確認
+
+## プロジェクト固有の注意点
+- Azure OpenAI APIのレート制限に注意
+- PDFテキスト抽出はPyPDF2を使用（画像のみのPDFは対応不可）
+- 日本語フォントはReportLabのCIDFontを使用
+- Docker環境ではNotoフォントが自動インストールされる
+
+## 質問や不明点
+- プロジェクトの詳細は`PROJECT_SUMMARY.md`を参照
+- Dockerの使用方法は`DOCKER_USAGE.md`を参照
+- PDF抽出の注意事項は`PDF_EXTRACTION_NOTES.md`を参照
+
