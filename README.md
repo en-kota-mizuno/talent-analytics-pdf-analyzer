@@ -214,7 +214,6 @@ talent-analytics-pdf-analyzer/
 │   └── workflows/
 │       └── ci.yml                  # CI/CDワークフロー
 ├── README.md                       # このファイル
-├── PROJECT_SUMMARY.md              # プロジェクト概要ドキュメント
 ├── PDF_EXTRACTION_NOTES.md        # PDF抽出に関する注意事項
 ├── DOCKER_USAGE.md                 # Docker使用方法ガイド
 └── DOCKER_BENEFITS.md              # Docker使用の利点

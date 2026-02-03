@@ -89,7 +89,7 @@ README.mdは常に最新の状態を保つようにしてください。
 
 ## 推奨事項
 - コード変更時は関連するテストも更新
-- ドキュメント（README.md、PROJECT_SUMMARY.md）を同期
+- ドキュメント（README.md）を同期
 - プルリクエスト前にローカルでテストを実行
 - CI/CDが通ることを確認
 
@@ -100,7 +100,7 @@ README.mdは常に最新の状態を保つようにしてください。
 - Docker環境ではNotoフォントが自動インストールされる
 
 ## 質問や不明点
-- プロジェクトの詳細は`PROJECT_SUMMARY.md`を参照
+- プロジェクトの詳細は`README.md`を参照
 - Dockerの使用方法は`DOCKER_USAGE.md`を参照
 - PDF抽出の注意事項は`PDF_EXTRACTION_NOTES.md`を参照
 
