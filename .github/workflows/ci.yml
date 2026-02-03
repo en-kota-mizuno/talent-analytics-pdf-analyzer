@@ -44,11 +44,4 @@ jobs:
       - name: Run tests
         run: |
           pytest -m "not requires_env"
-      
-      # ステップ5: カバレッジレポートのアップロード（オプション）
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./coverage.xml
-          fail_ci_if_error: false  # カバレッジが低くてもCIを失敗させない
 
